@@ -33,7 +33,7 @@ else:
     )
 
     if uploaded_file and question:
-    document = ""
+        document = ""
 
     if uploaded_file.type == "text/plain":
         # Handle .txt files
