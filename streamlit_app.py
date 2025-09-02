@@ -1,5 +1,6 @@
 import streamlit as st
 from openai import OpenAI
+import pdfplumber 
 
 # Show title and description.
 st.title("📄 Document question answering")
@@ -21,7 +22,7 @@ else:
 
     # Let the user upload a file via `st.file_uploader`.
     uploaded_file = st.file_uploader(
-        "Upload a document (.txt or .md)", type=("txt", "md")
+        "Upload a document (.txt or .pdf)", type=("txt", "pdf")
     )
 
     # Ask the user for a question via `st.text_area`.
@@ -32,22 +33,31 @@ else:
     )
 
     if uploaded_file and question:
+    document = ""
 
-        # Process the uploaded file and question.
-        document = uploaded_file.read().decode()
-        messages = [
-            {
-                "role": "user",
-                "content": f"Here's a document: {document} \n\n---\n\n {question}",
-            }
-        ]
+    if uploaded_file.type == "text/plain":
+        # Handle .txt files
+        document = uploaded_file.read().decode("utf-8", errors="ignore")
 
-        # Generate an answer using the OpenAI API.
-        stream = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-            stream=True,
-        )
+    elif uploaded_file.type == "application/pdf":
+        # Handle .pdf files using pdfplumber
+        with pdfplumber.open(uploaded_file) as pdf:
+            for page in pdf.pages:
+                document += page.extract_text() or ""  # handle empty pages safely
 
-        # Stream the response to the app using `st.write_stream`.
-        st.write_stream(stream)
+    # Now feed the extracted document into the prompt
+    messages = [
+        {
+            "role": "user",
+            "content": f"Here's a document: {document} \n\n---\n\n {question}",
+        }
+    ]
+
+    # Generate an answer using the OpenAI API.
+    stream = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=messages,
+        stream=True,
+    )
+
+    st.write_stream(stream)
