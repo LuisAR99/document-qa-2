@@ -32,8 +32,12 @@ else:
         disabled=not uploaded_file,
     )
 
-    if uploaded_file and question:
-        document = ""
+if uploaded_file and question:
+    document = ""
+
+    # Make sure the buffer is at the start for every rerun
+    if hasattr(uploaded_file, "seek"):
+        uploaded_file.seek(0)
 
     if uploaded_file.type == "text/plain":
         # Handle .txt files
@@ -43,21 +47,24 @@ else:
         # Handle .pdf files using pdfplumber
         with pdfplumber.open(uploaded_file) as pdf:
             for page in pdf.pages:
-                document += page.extract_text() or ""  # handle empty pages safely
+                document += page.extract_text() or ""  # safe for blank pages
 
-    # Now feed the extracted document into the prompt
-    messages = [
-        {
-            "role": "user",
-            "content": f"Here's a document: {document} \n\n---\n\n {question}",
-        }
-    ]
+    else:
+        st.error("Unsupported file type. Please upload a .txt or .pdf.")
+        document = ""
 
-    # Generate an answer using the OpenAI API.
-    stream = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=messages,
-        stream=True,
-    )
+    if document:
+        messages = [
+            {
+                "role": "user",
+                "content": f"Here's a document: {document} \n\n---\n\n {question}",
+            }
+        ]
 
-    st.write_stream(stream)
+        stream = client.chat.completions.create(
+            model="gpt-3.5",
+            messages=messages,
+            stream=True,
+        )
+
+        st.write_stream(stream)
