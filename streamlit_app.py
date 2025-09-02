@@ -66,6 +66,7 @@ if uploaded_file and question:
             model="gpt-4.1",
             messages=messages,
             stream=True,
+            timeout=30
         )
 
         st.write_stream(stream)
