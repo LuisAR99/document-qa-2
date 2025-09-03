@@ -69,4 +69,25 @@ if uploaded_file and question:
             timeout=30
         )
 
-        st.write_stream(stream)
+ from openai import APIConnectionError, APIStatusError, RateLimitError, AuthenticationError
+
+try:
+    # 1) Try NON-streaming with a timeout
+    resp = client.chat.completions.create(
+        model="gpt-4.1",
+        messages=[{"role": "user", "content": f"Here's a document: {document}\n\n---\n\n{question}"}],
+        timeout=30,  # seconds
+    )
+    st.write(resp.choices[0].message.content)
+
+except APIConnectionError as e:
+    st.error(f"Network/connection problem to OpenAI: {e}")
+except AuthenticationError:
+    st.error("Authentication failed. Check your API key (no spaces, correct key).")
+except RateLimitError:
+    st.error("Rate limited. Try again or reduce request frequency.")
+except APIStatusError as e:
+    st.error(f"OpenAI API returned status {e.status_code}: {e.message}")
+except Exception as e:
+    st.error(f"Unexpected error: {e}")
+
