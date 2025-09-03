@@ -69,7 +69,7 @@ if uploaded_file and question:
             timeout=30
         )
 
- from openai import APIConnectionError, APIStatusError, RateLimitError, AuthenticationError
+from openai import APIConnectionError, APIStatusError, RateLimitError, AuthenticationError
 
 try:
     # 1) Try NON-streaming with a timeout
