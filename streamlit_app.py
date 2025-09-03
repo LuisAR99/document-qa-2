@@ -76,7 +76,7 @@ from openai import APIConnectionError, APIStatusError, RateLimitError, Authentic
 try:
     # 1) Try NON-streaming with a timeout
     resp = client.chat.completions.create(
-        model="gpt-3.5",
+        model="gpt-5",
         messages=[{"role": "user", "content": f"Here's a document: {document}\n\n---\n\n{question}"}],
         timeout=30,  # seconds
     )
